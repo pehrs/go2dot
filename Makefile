@@ -6,7 +6,7 @@ BUILD_DATE=$(shell date +"%Y-%m-%dT%H:%M")
 COMMIT=$(shell git show -s --format="%h" HEAD)
 
 DIRTY_COUNT=$(shell git status --porcelain | wc -l)
-ifeq ($(DIRTY_COUNT),"0")
+ifeq ($(DIRTY_COUNT),0)
   VERSION="$(GIT_VERSION)"
 else
   VERSION="$(GIT_VERSION)-dirty"
