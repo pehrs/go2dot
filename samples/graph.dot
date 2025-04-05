@@ -1,0 +1,20 @@
+
+	digraph "" {
+			labelloc="t"
+			graph [label = "golang"];
+			node [
+					shape=record
+					labelloc="t"
+			];
+	GolangStructField[label = <{<b>«struct»<br/>GolangStructField</b><br align="left"/>|+ Ast *ast.Field<br align="left"/>+ Name string<br align="left"/>+ Type string<br align="left"/>|}>, shape=record];
+GolangFuncArg[label = <{<b>«struct»<br/>GolangFuncArg</b><br align="left"/>|+ Name string<br align="left"/>+ Type string<br align="left"/>|}>, shape=record];
+GolangStructFunc[label = <{<b>«struct»<br/>GolangStructFunc</b><br align="left"/>|+ Ast *ast.FuncDecl<br align="left"/>+ Name string<br align="left"/>+ ReturnType string<br align="left"/>+ Args []GolangFuncArg<br align="left"/>|}>, shape=record];
+GolangStruct[label = <{<b>«struct»<br/>GolangStruct</b><br align="left"/>|+ Ast *ast.StructType<br align="left"/>+ Name string<br align="left"/>+ Fields []GolangStructField<br align="left"/>+ Funcs []GolangStructFunc<br align="left"/>|+ String() string<br align="left"/>+ TypeId() string<br align="left"/>+ DotDeps(structName map[(*GolangStruct)]string, pool map[string](*GolangStruct)) string<br align="left"/>+ Dot() string<br align="left"/>}>, shape=record];
+
+
+"GolangStructFunc" -> "GolangFuncArg" [arrowhead=open style=dashed];
+
+"GolangStruct" -> "GolangStructField" [arrowhead=open style=dashed];
+"GolangStruct" -> "GolangStructFunc" [arrowhead=open style=dashed];
+
+}
