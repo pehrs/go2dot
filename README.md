@@ -1,6 +1,6 @@
 # go2dot
 
-A utility to generate a Grapviz dot graph for a golang package structures and functions.
+A utility to generate a [Graphviz](https://graphviz.org/) dot graph for a golang package structures and functions.
 
 Example:
 
@@ -14,7 +14,7 @@ Please use [resent version](https://gitlab.com/graphviz/graphviz/-/releases) of 
 brew install graphviz
 
 git clone git@github.com:pehrs/go2dot.git
-cd ./go2dot
+cd ./go2dot¡
 make
 
 export PATH=/path/to/go2dot/bin:$PATH
