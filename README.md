@@ -11,10 +11,14 @@ Example:
 Please use [resent version](https://gitlab.com/graphviz/graphviz/-/releases) of dot/graphviz.
 
 ```shell
+#install dot
 brew install graphviz
 
+# Install golang
+asdf install golang $(cat .tool-versions | grep "golang" | cut -d" " -f2)
+
 git clone git@github.com:pehrs/go2dot.git
-cd ./go2dot¡
+cd ./go2dot
 make
 
 export PATH=/path/to/go2dot/bin:$PATH
