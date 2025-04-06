@@ -97,7 +97,7 @@ func (theFunc FuncDecl) DotLabel() string {
 	if theFunc.Ast.Type.Params != nil {
 		paramDecl = fmt.Sprintf("(%s)", fields(*theFunc.Ast.Type.Params))
 	}
-	returnDecl := "res"
+	returnDecl := ""
 	// print return params
 	if theFunc.Ast.Type.Results != nil {
 		if len(theFunc.Ast.Type.Results.List) > 1 {
