@@ -1,12 +1,20 @@
 # go2dot
 
-A utility to generate a Grapviz dot graph for a golang package structs.
+A utility to generate a Grapviz dot graph for a golang package structures and functions.
+
+Example:
+
+![graph example](./samples/graph.png)
 
 ## Install
 
-Please use a later [version](https://gitlab.com/graphviz/graphviz/-/releases) of Graphviz/dot (>12) 
+Please use [resent version](https://gitlab.com/graphviz/graphviz/-/releases) of dot/graphviz.
 
 ```shell
+brew install graphviz
+
+git clone git@github.com:pehrs/go2dot.git
+cd ./go2dot
 make
 
 export PATH=/path/to/go2dot/bin:$PATH
