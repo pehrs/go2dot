@@ -12,6 +12,8 @@ import (
 	"pehrs.com/go2dot/pkg/golang"
 )
 
+var showPrivate = false
+
 var dotCmd = &cobra.Command{
 	Use:   "dot",
 	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
@@ -38,34 +40,74 @@ var dotCmd = &cobra.Command{
 			return err
 		}
 		for _, pkg := range parsed {
-			title := pkg.Name
 			fmt.Printf(`
 	digraph "" {
+			fontname="Jetbrains Mono Regular,Ubuntu Mono,Helvetica"
+			rankdir = TB;
 			labelloc="t"
-			graph [label = "%s"];
+			graph [];
 			node [
-					shape=record
-					labelloc="t"
+				fontname="Jetbrains Mono Regular,Ubuntu Mono,Helvetica"
+				shape=record
+				labelloc="t"
 			];
-	`, title)
+	`)
 
+			var clusterCount = 0
+			var fcount = 1
 			for filename := range pkg.Files {
 				structs, err := golang.ExtractStructs(filename)
 				if err != nil {
 					return err
 				}
-				var structMap = map[string](*golang.GolangStruct){}
-				var structNameMap = map[(*golang.GolangStruct)]string{}
+				var structMap = map[string](*golang.StructDecl){}
+				var structNameMap = map[(*golang.StructDecl)]string{}
 				for _, theStruct := range structs {
-					fmt.Printf("%s\n", theStruct.Dot())
-					// typeId := theStruct.TypeId()
-					structMap[theStruct.Name] = theStruct
-					structNameMap[theStruct] = theStruct.Name
+					if showPrivate || theStruct.IsPublic() {
+						fmt.Printf("%s\n", theStruct.Dot(showPrivate))
+						// typeId := theStruct.TypeId()
+						structMap[theStruct.Name] = theStruct
+						structNameMap[theStruct] = theStruct.Name
+					}
 				}
 				for _, theStruct := range structs {
-					fmt.Printf("%s\n", theStruct.DotDeps(structNameMap, structMap))
+					if showPrivate || theStruct.IsPublic() {
+						fmt.Printf("%s\n", theStruct.DotDeps(structNameMap, structMap))
+					}
 				}
 			}
+
+			fmt.Printf("subgraph cluster_%d { rank = same; label = \"«%s functions»\";\n",
+				clusterCount, pkg.Name,
+			)
+			fmt.Printf("%s_Functions[label = <{",
+				pkg.Name,
+			)
+			for filename := range pkg.Files {
+
+				funcs, err := golang.ExtractFunctions(filename)
+				if err != nil {
+					return err
+				}
+				funcDecls := ""
+				for _, theFunc := range funcs {
+					if showPrivate || theFunc.IsPublic() {
+						funcDecls = fmt.Sprintf("%s%s", funcDecls, theFunc.DotLabel())
+					}
+				}
+				// fmt.Printf("%s_Functions_%d[label = <{<b>«func» (%s)</b><br align=\"left\"/>%s}>, shape=record];\n",
+				// 	pkg.Name,
+				// 	fcount,
+				// 	filename,
+				// 	funcDecls,
+				// )
+				fmt.Printf("<b>%s</b><br align=\"left\"/>%s", filename, funcDecls)
+				fcount++
+			}
+			fmt.Printf("}>, color=white, shape=record];\n")
+			fmt.Printf("}\n")
+			clusterCount++
+
 			fmt.Printf("}\n")
 		}
 
@@ -75,5 +117,7 @@ var dotCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(dotCmd)
+
+	dotCmd.PersistentFlags().BoolVarP(&showPrivate, "private", "p", showPrivate, "Render private structs and functions.")
 
 }

@@ -1,20 +1,26 @@
 
 	digraph "" {
+			fontname="Jetbrains Mono Regular,Ubuntu Mono,Helvetica"
+			rankdir = TB;
 			labelloc="t"
-			graph [label = "golang"];
+			graph [];
 			node [
-					shape=record
-					labelloc="t"
+				fontname="Jetbrains Mono Regular,Ubuntu Mono,Helvetica"
+				shape=record
+				labelloc="t"
 			];
-	GolangStructField[label = <{<b>«struct»<br/>GolangStructField</b><br align="left"/>|+ Ast *ast.Field<br align="left"/>+ Name string<br align="left"/>+ Type string<br align="left"/>|}>, shape=record];
-GolangFuncArg[label = <{<b>«struct»<br/>GolangFuncArg</b><br align="left"/>|+ Name string<br align="left"/>+ Type string<br align="left"/>|}>, shape=record];
-GolangStructFunc[label = <{<b>«struct»<br/>GolangStructFunc</b><br align="left"/>|+ Ast *ast.FuncDecl<br align="left"/>+ Name string<br align="left"/>+ ReturnType string<br align="left"/>+ Args []GolangFuncArg<br align="left"/>|}>, shape=record];
-GolangStruct[label = <{<b>«struct»<br/>GolangStruct</b><br align="left"/>|+ Ast *ast.StructType<br align="left"/>+ Name string<br align="left"/>+ Fields []GolangStructField<br align="left"/>+ Funcs []GolangStructFunc<br align="left"/>|+ String() string<br align="left"/>+ TypeId() string<br align="left"/>+ DotDeps(structName map[(*GolangStruct)]string, pool map[string](*GolangStruct)) string<br align="left"/>+ Dot() string<br align="left"/>}>, shape=record];
+	StructFieldDecl[label = <{<b>«struct»<br/>StructFieldDecl</b><br align="left"/>|+ Ast *ast.Field<br align="left"/>+ Name string<br align="left"/>+ Type string<br align="left"/>|+ IsPublic() bool<br align="left"/>}>, shape=record];
+FuncArgDecl[label = <{<b>«struct»<br/>FuncArgDecl</b><br align="left"/>|+ Name string<br align="left"/>+ Type string<br align="left"/>|}>, shape=record];
+FuncDecl[label = <{<b>«struct»<br/>FuncDecl</b><br align="left"/>|+ Ast *ast.FuncDecl<br align="left"/>+ Package string<br align="left"/>+ Name string<br align="left"/>+ ReturnType string<br align="left"/>+ Args []FuncArgDecl<br align="left"/>|+ IsPublic() bool<br align="left"/>+ Dot() string<br align="left"/>+ DotLabel() string<br align="left"/>}>, shape=record];
+StructDecl[label = <{<b>«struct»<br/>StructDecl</b><br align="left"/>|+ Ast *ast.StructType<br align="left"/>+ Package string<br align="left"/>+ Name string<br align="left"/>+ Fields []StructFieldDecl<br align="left"/>+ Funcs []FuncDecl<br align="left"/>|+ String() string<br align="left"/>+ IsPublic() bool<br align="left"/>+ TypeId() string<br align="left"/>+ DotDeps(structName map[(*StructDecl)]string, pool map[string](*StructDecl)) string<br align="left"/>+ Dot(showPrivate bool) string<br align="left"/>}>, shape=record];
 
 
-"GolangStructFunc" -> "GolangFuncArg" [arrowhead=open style=dashed];
+"FuncDecl" -> "FuncArgDecl" [arrowhead=open style=dashed];
 
-"GolangStruct" -> "GolangStructField" [arrowhead=open style=dashed];
-"GolangStruct" -> "GolangStructFunc" [arrowhead=open style=dashed];
+"StructDecl" -> "StructFieldDecl" [arrowhead=open style=dashed];
+"StructDecl" -> "FuncDecl" [arrowhead=open style=dashed];
 
+subgraph cluster_0 { rank = same; label = "«golang functions»";
+golang_Functions[label = <{<b>pkg/golang/struct.go</b><br align="left"/>+ NewStructDecl(pkgName string, name string, str *ast.StructType) *StructDecl<br align="left"/>- getAstFile(filename string) (*ast.File, error)<br align="left"/>+ ExtractStructs(filename string) ([]*StructDecl, error)<br align="left"/>+ ExtractFunctions(filename string) ([]FuncDecl, error)<br align="left"/>- expr(e ast.Expr) ret string<br align="left"/>- getTypeId(e ast.Expr) string<br align="left"/>- dotEscape(in string) string<br align="left"/>- fields(fl ast.FieldList) ret string<br align="left"/>}>, color=white, shape=record];
+}
 }

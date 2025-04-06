@@ -12,41 +12,56 @@ import (
 	"unicode"
 )
 
-type GolangStructField struct {
+type StructFieldDecl struct {
 	Ast  *ast.Field
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
 
-type GolangFuncArg struct {
+type FuncArgDecl struct {
 	Name string
 	Type string
 }
 
-type GolangStructFunc struct {
+type FuncDecl struct {
 	Ast        *ast.FuncDecl
+	Package    string
 	Name       string
 	ReturnType string
-	Args       []GolangFuncArg
+	Args       []FuncArgDecl
 }
 
-type GolangStruct struct {
-	Ast    *ast.StructType
-	Name   string              `json:"name"`
-	Fields []GolangStructField `json:"fields"`
-	Funcs  []GolangStructFunc  `json:"functions"`
+type StructDecl struct {
+	Ast *ast.StructType
+
+	Package string            `json:"package"`
+	Name    string            `json:"name"`
+	Fields  []StructFieldDecl `json:"fields"`
+	Funcs   []FuncDecl        `json:"functions"`
 }
 
-func (str GolangStruct) String() string {
+func (str StructDecl) String() string {
 	j, _ := json.MarshalIndent(str, "", "  ")
 	return string(j)
 }
 
-func (str GolangStruct) TypeId() string {
+func (theField StructFieldDecl) IsPublic() bool {
+	return unicode.IsUpper([]rune(theField.Name)[0])
+}
+
+func (theFunc FuncDecl) IsPublic() bool {
+	return unicode.IsUpper([]rune(theFunc.Name)[0])
+}
+
+func (str StructDecl) IsPublic() bool {
+	return unicode.IsUpper([]rune(str.Name)[0])
+}
+
+func (str StructDecl) TypeId() string {
 	return getTypeId(str.Ast)
 }
 
-func (str GolangStruct) DotDeps(structName map[(*GolangStruct)]string, pool map[string](*GolangStruct)) string {
+func (str StructDecl) DotDeps(structName map[(*StructDecl)]string, pool map[string](*StructDecl)) string {
 
 	result := ""
 
@@ -64,47 +79,85 @@ func (str GolangStruct) DotDeps(structName map[(*GolangStruct)]string, pool map[
 	return result
 }
 
+func (theFunc FuncDecl) Dot() string {
+	result := fmt.Sprintf("%s[label = <{<b>«func»<br align=\"left\"/>%s</b>}>, shape=record];", theFunc.Name, theFunc.DotLabel())
+
+	return result
+}
+
+func (theFunc FuncDecl) DotLabel() string {
+
+	result := ""
+
+	access := "-"
+	if theFunc.IsPublic() {
+		access = "+"
+	}
+	paramDecl := "param"
+	if theFunc.Ast.Type.Params != nil {
+		paramDecl = fmt.Sprintf("(%s)", fields(*theFunc.Ast.Type.Params))
+	}
+	returnDecl := "res"
+	// print return params
+	if theFunc.Ast.Type.Results != nil {
+		if len(theFunc.Ast.Type.Results.List) > 1 {
+			returnDecl = fmt.Sprintf("(%s)", fields(*theFunc.Ast.Type.Results))
+		} else {
+			returnDecl = fields(*theFunc.Ast.Type.Results)
+		}
+	}
+	result = fmt.Sprintf("%s%s %s%s %s<br align=\"left\"/>",
+		result, access, theFunc.Name, dotEscape(paramDecl), dotEscape(returnDecl),
+	)
+	return result
+}
+
 //	 Interface1[
 //		label = <{<b>«interface» I/O</b> | + property<br/>...<br/>|+ method<br/>...<br/>}>,
 //		shape=record
 //
 // ];
-func (str GolangStruct) Dot() string {
+func (str StructDecl) Dot(showPrivate bool) string {
 
 	result := fmt.Sprintf("%s[label = <{<b>«struct»<br/>%s</b><br align=\"left\"/>|",
 		str.Name, str.Name)
 
 	for _, field := range str.Fields {
-		access := "+"
-		if unicode.IsLower([]rune(field.Name)[0]) {
-			access = "-"
+		if showPrivate || field.IsPublic() {
+			access := "-"
+			if field.IsPublic() {
+				access = "+"
+			}
+			result = fmt.Sprintf("%s%s %s %s<br align=\"left\"/>",
+				result, access, field.Name, dotEscape(field.Type),
+			)
 		}
-		result = fmt.Sprintf("%s%s %s %s<br align=\"left\"/>",
-			result, access, field.Name, dotEscape(field.Type),
-		)
 	}
 	result = fmt.Sprintf("%s|", result)
 	for _, theFunc := range str.Funcs {
-		access := "+"
-		if unicode.IsLower([]rune(theFunc.Name)[0]) {
-			access = "-"
+		// access := "+"
+		// if unicode.IsLower([]rune(theFunc.Name)[0]) {
+		// 	access = "-"
+		// }
+		// paramDecl := "param"
+		// if theFunc.Ast.Type.Params != nil {
+		// 	paramDecl = fmt.Sprintf("(%s)", fields(*theFunc.Ast.Type.Params))
+		// }
+		// returnDecl := "res"
+		// // print return params
+		// if theFunc.Ast.Type.Results != nil {
+		// 	if len(theFunc.Ast.Type.Results.List) > 1 {
+		// 		returnDecl = fmt.Sprintf("(%s)", fields(*theFunc.Ast.Type.Results))
+		// 	} else {
+		// 		returnDecl = fmt.Sprintf("%s", fields(*theFunc.Ast.Type.Results))
+		// 	}
+		// }
+		// result = fmt.Sprintf("%s%s %s%s %s<br align=\"left\"/>",
+		// 	result, access, theFunc.Name, dotEscape(paramDecl), dotEscape(returnDecl),
+		// )
+		if showPrivate || theFunc.IsPublic() {
+			result = fmt.Sprintf("%s%s", result, theFunc.DotLabel())
 		}
-		paramDecl := "param"
-		if theFunc.Ast.Type.Params != nil {
-			paramDecl = fmt.Sprintf("(%s)", fields(*theFunc.Ast.Type.Params))
-		}
-		returnDecl := "res"
-		// print return params
-		if theFunc.Ast.Type.Results != nil {
-			if len(theFunc.Ast.Type.Results.List) > 1 {
-				returnDecl = fmt.Sprintf("(%s)", fields(*theFunc.Ast.Type.Results))
-			} else {
-				returnDecl = fmt.Sprintf("%s", fields(*theFunc.Ast.Type.Results))
-			}
-		}
-		result = fmt.Sprintf("%s%s %s%s %s<br align=\"left\"/>",
-			result, access, theFunc.Name, dotEscape(paramDecl), dotEscape(returnDecl),
-		)
 	}
 
 	result = fmt.Sprintf("%s}>, shape=record];", result)
@@ -112,17 +165,18 @@ func (str GolangStruct) Dot() string {
 	return result
 }
 
-func NewGolangStruct(name string, str *ast.StructType) *GolangStruct {
+func NewStructDecl(pkgName string, name string, str *ast.StructType) *StructDecl {
 
-	goStruct := new(GolangStruct)
+	goStruct := new(StructDecl)
 
+	goStruct.Package = pkgName
 	goStruct.Name = name
 	goStruct.Ast = str
 
 	for _, field := range str.Fields.List {
 
 		for _, fieldName := range field.Names {
-			goStruct.Fields = append(goStruct.Fields, GolangStructField{
+			goStruct.Fields = append(goStruct.Fields, StructFieldDecl{
 				Ast:  field,
 				Name: fieldName.String(),
 				Type: expr(field.Type),
@@ -155,16 +209,18 @@ func getAstFile(filename string) (*ast.File, error) {
 	return astFile, nil
 }
 
-func ExtractStructs(filename string) ([]*GolangStruct, error) {
+func ExtractStructs(filename string) ([]*StructDecl, error) {
 	astFile, err := getAstFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	var result = []*GolangStruct{}
+	var result = []*StructDecl{}
 
-	var structMap = map[string]*GolangStruct{}
-	var structFuncMap = map[string][]GolangStructFunc{}
+	var structMap = map[string]*StructDecl{}
+	var structFuncMap = map[string][]FuncDecl{}
+
+	pkgName := astFile.Name.String()
 
 	ast.Inspect(astFile, func(n ast.Node) bool {
 
@@ -177,17 +233,14 @@ func ExtractStructs(filename string) ([]*GolangStruct, error) {
 				// 	shape=record
 				// ];
 
-				// result = fmt.Sprintf("%s\n%s [label = <{<b>«struct»<br/>%s</b>| %s}>]",
-				// 	result, fn.Name.String(), fn.Name.String(), structDotFields(*str.Fields))
-
-				theStruct := NewGolangStruct(fn.Name.String(), str)
+				theStruct := NewStructDecl(pkgName, fn.Name.String(), str)
 
 				result = append(result, theStruct)
 				structMap[fn.Name.String()] = theStruct
 			}
 		case *ast.FuncDecl:
 
-			// We are only looking for singler reciever functions
+			// We are only looking for single reciever functions
 			if fn.Recv != nil && len(fn.Recv.List) == 1 {
 				recv := fn.Recv.List[0]
 				structName := getTypeId(recv.Type)
@@ -197,26 +250,21 @@ func ExtractStructs(filename string) ([]*GolangStruct, error) {
 					if len(fn.Type.Results.List) > 1 {
 						returnType = fmt.Sprintf("(%s)", fields(*fn.Type.Results))
 					} else {
-						returnType = fmt.Sprintf("%s", fields(*fn.Type.Results))
+						returnType = fields(*fn.Type.Results)
 					}
 				}
 
-				// theFunc := new(GolangStructFunc)
-				// theFunc.Ast = fn
-				// theFunc.Name = structName
-				// theFunc.ReturnType = returnType
-				// theFunc.Args = []GolangFuncArg{}
-
-				theFunc := GolangStructFunc{
+				theFunc := FuncDecl{
 					Ast:        fn,
+					Package:    pkgName,
 					Name:       fn.Name.String(),
 					ReturnType: returnType,
-					Args:       []GolangFuncArg{},
+					Args:       []FuncArgDecl{},
 				}
 
 				for _, param := range fn.Type.Params.List {
 					for _, paramName := range param.Names {
-						theFunc.Args = append(theFunc.Args, GolangFuncArg{
+						theFunc.Args = append(theFunc.Args, FuncArgDecl{
 							Name: paramName.String(),
 							Type: expr(param.Type),
 						})
@@ -226,32 +274,12 @@ func ExtractStructs(filename string) ([]*GolangStruct, error) {
 				if ok {
 					structFuncMap[structName] = append(list, theFunc)
 				} else {
-					structFuncMap[structName] = []GolangStructFunc{
+					structFuncMap[structName] = []FuncDecl{
 						theFunc,
 					}
 				}
 
 			}
-			// // if a method, explore and print receiver
-			// if fn.Recv != nil {
-			// 	fmt.Printf("(%s)", fields(*fn.Recv))
-			// }
-
-			// // print actual function name
-			// fmt.Printf("%v", fn.Name)
-
-			// // print function parameters
-			// if fn.Type.Params != nil {
-			// 	fmt.Printf("(%s)", fields(*fn.Type.Params))
-			// }
-
-			// // print return params
-			// if fn.Type.Results != nil {
-			// 	fmt.Printf("(%s)", fields(*fn.Type.Results))
-			// }
-
-			fmt.Sprintf("%v", fn)
-
 		}
 
 		for structName, funcList := range structFuncMap {
@@ -261,6 +289,59 @@ func ExtractStructs(filename string) ([]*GolangStruct, error) {
 			}
 		}
 
+		return true
+	})
+
+	return result, nil
+}
+
+// Extract "pure" functions that do not belong to a struct
+func ExtractFunctions(filename string) ([]FuncDecl, error) {
+	astFile, err := getAstFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = []FuncDecl{}
+
+	pkgName := astFile.Name.String()
+
+	ast.Inspect(astFile, func(n ast.Node) bool {
+
+		switch fn := n.(type) {
+		case *ast.FuncDecl:
+
+			// We are only looking for "pure" functions
+			if fn.Recv == nil {
+
+				returnType := ""
+				if fn.Type.Results != nil {
+					if len(fn.Type.Results.List) > 1 {
+						returnType = fmt.Sprintf("(%s)", fields(*fn.Type.Results))
+					} else {
+						returnType = fields(*fn.Type.Results)
+					}
+				}
+
+				theFunc := FuncDecl{
+					Ast:        fn,
+					Package:    pkgName,
+					Name:       fn.Name.String(),
+					ReturnType: returnType,
+					Args:       []FuncArgDecl{},
+				}
+
+				for _, param := range fn.Type.Params.List {
+					for _, paramName := range param.Names {
+						theFunc.Args = append(theFunc.Args, FuncArgDecl{
+							Name: paramName.String(),
+							Type: expr(param.Type),
+						})
+					}
+				}
+				result = append(result, theFunc)
+			}
+		}
 		return true
 	})
 
