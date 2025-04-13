@@ -72,7 +72,7 @@ func (str StructDecl) DotDeps(structName map[(*StructDecl)]string, pool map[stri
 		relatedStruct, ok := pool[typeId]
 		if ok {
 			relatedName := structName[relatedStruct]
-			fmt.Printf("\"%v\" -> \"%v\" [arrowhead=open style=dashed];\n", str.Name, relatedName)
+			result = result + fmt.Sprintf("\"%v\" -> \"%v\" [arrowhead=open style=dashed];\n", str.Name, relatedName)
 		}
 	}
 

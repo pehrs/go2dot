@@ -22,8 +22,8 @@ build:				## Build binary
 generate-png: build		## Generate a PNG from ./pkg/golang
 	rm -f samples/test*
 	./bin/go2dot dot ./pkg/golang > samples/test-golang-public.dot \
-		&& dot -Gfontname="Sans" -Nfontname="Sans" -Gsize=4,3 -Gdpi=1000 -Tpng samples/test-golang-public.dot -o samples/test-golang-public.png \
-		&& dot -Gfontname="Sans" -Nfontname="Sans" -Tsvg samples/test-golang-public.dot -o samples/test-golang-public.svg
+		&& dot -Gfontname="Sans" -Nfontname="Serif" -Gsize=4,3 -Gdpi=1000 -Tpng samples/test-golang-public.dot -o samples/test-golang-public.png \
+		&& dot -Gfontname="Courier" -Nfontname="Courier" -Tsvg samples/test-golang-public.dot -o samples/test-golang-public.svg
 	./bin/go2dot dot -p ./pkg/golang > samples/test-golang.dot && dot -T png samples/test-golang.dot -o samples/test-golang.png
 	./bin/go2dot dot -p ./cmd > samples/test-cmd.dot && dot -T png samples/test-cmd.dot -o samples/test-cmd.png
 	./bin/go2dot dot -p ./ > samples/test-main.dot && dot -T png samples/test-main.dot -o samples/test-main.png
