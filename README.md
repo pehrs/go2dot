@@ -26,10 +26,22 @@ export PATH=/path/to/go2dot/bin:$PATH
 
 ## Usage
 
+
+### Genereate DOT file
+
 ```shell
 # Generate DOT file for a package (including private functions and structs)
-go2dot dot -p ./pkg/golang/ > samples/graph.dot 
+go2dot dot --private ./pkg/golang/ > samples/graph.dot 
 
 # Generate PNG
-dot -Tpng samples/graph.dot -o samples/graph.png
+dot -Tpng samples/graph.dot -o samples/test-pkg-golang.png
+```
+
+
+### Genereate image
+
+```shell
+# Generate high quality PNG with custom fonts
+go2dot graph -Tpng -p ./pkg/golang/ samples/test-pkg-golang.png \
+    -x '-Gfontname="Ubuntu Mono" -Nfontname="Ubuntu Mono" -Gsize=4,3 -Gdpi=1000'
 ```
