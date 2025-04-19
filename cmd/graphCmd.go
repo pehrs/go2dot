@@ -22,6 +22,7 @@ var graphCmd = &cobra.Command{
 		pkgPath := args[0]
 		outputPath := args[1]
 
+		graphviz.SetDotExec(dotExec)
 		graphviz.SetOptions(additionalOptions)
 		graphviz.ShowPrivate(showPrivate)
 

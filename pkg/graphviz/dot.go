@@ -14,7 +14,7 @@ import (
 	"pehrs.com/go2dot/pkg/golang"
 )
 
-var dotExec = "/home/linuxbrew/.linuxbrew/bin/dot"
+var dotExec = "dot"
 var showPrivate = false
 
 // More Configs

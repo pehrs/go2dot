@@ -24,7 +24,7 @@ generate-png: build		## Generate a PNG from ./pkg/golang
 	./bin/go2dot dot ./pkg/golang > samples/test-golang-public.dot \
 		&& dot -Gfontname="Sans" -Nfontname="Serif" -Gsize=4,3 -Gdpi=1000 -Tpng samples/test-golang-public.dot -o samples/test-golang-public.png \
 		&& dot -Gfontname="Courier" -Nfontname="Courier" -Tsvg samples/test-golang-public.dot -o samples/test-golang-public.svg
-	./bin/go2dot dot -p ./pkg/golang > samples/test-golang.dot && dot -T png samples/test-golang.dot -o samples/test-golang.png
+	./bin/go2dot graph -p -x "-Gsize=4,3 -Gdpi=1000 -Nfontname=\"Ubuntu Mono\" -Gfontname=\"Courier\"" ./pkg/golang samples/test-golang.png
 	./bin/go2dot dot -p ./cmd > samples/test-cmd.dot && dot -T png samples/test-cmd.dot -o samples/test-cmd.png
 	./bin/go2dot dot -p ./ > samples/test-main.dot && dot -T png samples/test-main.dot -o samples/test-main.png
 
