@@ -10,7 +10,6 @@ var (
 	version = "dev"
 	commit  = "n/a"
 	date    = "n/a"
-	verbose = false
 )
 
 var versionCmd = &cobra.Command{
@@ -30,5 +29,4 @@ var versionCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(versionCmd)
 	versionCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", verbose, "Be verbose")
-
 }

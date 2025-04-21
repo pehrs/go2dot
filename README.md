@@ -6,6 +6,13 @@ Example:
 
 ![graph example](./samples/graph.png)
 
+
+## Requirements
+
+You need the following installed and in your path:
+- [golang](https://go.dev/doc/install)
+- [graphviz/dot](https://graphviz.org/download/)
+
 ## Install
 
 Please use [resent version](https://gitlab.com/graphviz/graphviz/-/releases) of dot/graphviz.
@@ -24,8 +31,7 @@ make
 export PATH=/path/to/go2dot/bin:$PATH
 ```
 
-## Usage
-
+## Usaged
 
 ### Genereate DOT file
 
@@ -45,3 +51,16 @@ dot -Tpng samples/graph.dot -o samples/test-pkg-golang.png
 go2dot graph -Tpng -p ./pkg/golang/ samples/test-pkg-golang.png \
     -x '-Gfontname="Ubuntu Mono" -Nfontname="Ubuntu Mono" -Gsize=4,3 -Gdpi=1000'
 ```
+
+## Known Issues
+
+- We have not tested go expression to the full yet. The [./samples/sample.go](./samples/sample.go) file is used to represent a "typical" go source for functional testing.
+
+- `dot` does not generate SVG very well.
+
+
+## Release Notes
+
+### 1.0.0
+
+Initial release

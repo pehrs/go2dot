@@ -1,0 +1,21 @@
+digraph "golang" {
+			fontname="Jetbrains Mono Regular,Ubuntu Mono,Helvetica"
+			rankdir = TB;
+			labelloc="t"
+			graph [];
+			node [
+				fontname="Jetbrains Mono Regular,Ubuntu Mono,Helvetica"
+				shape=record
+				labelloc="t"
+			];
+	DrainerReconciler[label = <{<b>«struct»<br/>DrainerReconciler</b><br align="left"/>|+ Scheme *runtime.Scheme<br align="left"/>+ Log logr.Logger<br align="left"/>|+ Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error)<br align="left"/>+ SetupWithManager(mgr ctrl.Manager) error<br align="left"/>}>, shape=record];
+OwnerNotFound[label = <{<b>«struct»<br/>OwnerNotFound</b><br align="left"/>||+ Error() string<br align="left"/>}>, shape=record];
+
+
+subgraph cluster_0 { rank = same; label = "«pkg:drainer»";
+drainer_Functions[label = <{<b>samples/drainer/drainer_controller.go</b><br align="left"/><br align="left"/>}>, color=white, shape=record];
+}
+subgraph cluster_1 { rank = same; label = "«pkg:drainer_test»";
+drainer_test_Functions[label = <{<b>samples/drainer/drainer_controller_test.go</b><br align="left"/>+DeploymentName: "test-deployment"<br align="left"/>+StatefulSetName: "test-statefulset"<br align="left"/><br align="left"/><br align="left"/><b>samples/drainer/suite_test.go</b><br align="left"/>+UseExistingCluster: calling os.Getenv != "false"<br align="left"/>+TmpDir: <br align="left"/><br align="left"/>+ TestAPIs(t *testing.T) <br align="left"/>}>, color=white, shape=record];
+}
+}

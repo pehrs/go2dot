@@ -9,13 +9,17 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 
 	"pehrs.com/go2dot/pkg/golang"
 )
 
 var dotExec = "dot"
 var showPrivate = false
+var verbose = false
+
+func Verbose(v bool) {
+	verbose = v
+}
 
 // More Configs
 // -Gfontname="Sans" -Nfontname="Sans" -Gsize=4,3 -Gdpi=1000
@@ -33,6 +37,8 @@ func SetDotExec(value string) {
 func SetOptions(opts string) {
 	options = opts
 }
+
+var clusterCount = 0
 
 func ToDot(pkgDir string) (string, error) {
 	fset := token.NewFileSet()
@@ -54,7 +60,6 @@ func ToDot(pkgDir string) (string, error) {
 	`
 	for _, pkg := range parsed {
 
-		var clusterCount = 0
 		var fcount = 1
 		for filename := range pkg.Files {
 			structs, err := golang.ExtractStructs(filename)
@@ -78,13 +83,26 @@ func ToDot(pkgDir string) (string, error) {
 			}
 		}
 
-		dot = dot + fmt.Sprintf("subgraph cluster_%d { rank = same; label = \"«pkg:%s functions»\";\n",
+		dot = dot + fmt.Sprintf("subgraph cluster_%d { rank = same; label = \"«pkg:%s»\";\n",
 			clusterCount, pkg.Name,
 		)
+		clusterCount++
+
 		dot = dot + fmt.Sprintf("%s_Functions[label = <{",
 			pkg.Name,
 		)
 		for filename := range pkg.Files {
+
+			vars, err := golang.ExtractVars(filename)
+			if err != nil {
+				return "", err
+			}
+			varDecls := ""
+			for _, theVar := range vars {
+				if showPrivate || theVar.IsPublic() {
+					varDecls = fmt.Sprintf("%s%s", varDecls, theVar.DotLabel())
+				}
+			}
 
 			funcs, err := golang.ExtractFunctions(filename)
 			if err != nil {
@@ -96,21 +114,17 @@ func ToDot(pkgDir string) (string, error) {
 					funcDecls = fmt.Sprintf("%s%s", funcDecls, theFunc.DotLabel())
 				}
 			}
-			// fmt.Printf("%s_Functions_%d[label = <{<b>«func» (%s)</b><br align=\"left\"/>%s}>, shape=record];\n",
-			// 	pkg.Name,
-			// 	fcount,
-			// 	filename,
-			// 	funcDecls,
-			// )
-			dot = dot + fmt.Sprintf("<b>%s</b><br align=\"left\"/>%s", filename, funcDecls)
+			if fcount > 1 {
+				dot = dot + "<br align=\"left\"/>"
+			}
+			dot = dot + fmt.Sprintf("<b>%s</b><br align=\"left\"/>%s<br align=\"left\"/>%s", filename, varDecls, funcDecls)
 			fcount++
 		}
 		dot = dot + fmt.Sprintf("}>, color=white, shape=record];\n")
-		dot = dot + fmt.Sprintf("}\n")
-		clusterCount++
 
 		dot = dot + fmt.Sprintf("}\n")
 	}
+	dot = dot + fmt.Sprintf("}\n")
 
 	return dot, nil
 }
@@ -127,23 +141,26 @@ func RunDot(dotGraph, format, outputFilename string) error {
 	w.Flush()
 	dotFile.Close()
 
-	runDotForFile(dotFile.Name(), format, outputFilename)
-
-	os.Remove(dotFile.Name())
-
+	err = runDotForFile(dotFile.Name(), format, outputFilename)
+	defer os.Remove(dotFile.Name())
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func runDotForFile(dotFilename, format, outputFilename string) error {
 
 	bashCmdLine := fmt.Sprintf("%s %s -T%s -o %s", dotExec, dotFilename, format, outputFilename)
-
+	if verbose {
+		fmt.Printf("comand line:\n%v\n", bashCmdLine)
+	}
 	if len(options) > 0 {
-		optParts := strings.Split(options, " ")
-		optProcessedParts := []string{}
-		for _, part := range optParts {
-			optProcessedParts = append(optProcessedParts, strings.Replace(part, "\"", "", -1))
-		}
+		// optParts := strings.Split(options, " ")
+		// optProcessedParts := []string{}
+		// for _, part := range optParts {
+		// 	optProcessedParts = append(optProcessedParts, strings.Replace(part, "\"", "", -1))
+		// }
 		bashCmdLine = fmt.Sprintf("%s %s", bashCmdLine, options)
 	}
 

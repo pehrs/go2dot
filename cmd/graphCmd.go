@@ -25,6 +25,11 @@ var graphCmd = &cobra.Command{
 		graphviz.SetDotExec(dotExec)
 		graphviz.SetOptions(additionalOptions)
 		graphviz.ShowPrivate(showPrivate)
+		graphviz.Verbose(verbose)
+
+		if verbose {
+			fmt.Printf("options: '%s'\n", additionalOptions)
+		}
 
 		fp, err := filepath.Abs(pkgPath)
 		if err != nil {
@@ -42,7 +47,10 @@ var graphCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		graphviz.RunDot(dot, outputFormat, outputPath)
+		err = graphviz.RunDot(dot, outputFormat, outputPath)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	},

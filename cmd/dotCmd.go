@@ -18,6 +18,7 @@ var dotCmd = &cobra.Command{
 
 		pkgPath := args[0]
 
+		graphviz.Verbose(verbose)
 		graphviz.ShowPrivate(showPrivate)
 
 		fp, err := filepath.Abs(pkgPath)
@@ -42,87 +43,6 @@ var dotCmd = &cobra.Command{
 		return nil
 	},
 }
-
-// func toDot(pkgDir string) (string, error) {
-// 	fset := token.NewFileSet()
-// 	parsed, err := parser.ParseDir(fset, pkgDir, func(os.FileInfo) bool { return true }, parser.AllErrors)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	dot := `
-// 	digraph "golang" {
-// 			fontname="Jetbrains Mono Regular,Ubuntu Mono,Helvetica"
-// 			rankdir = TB;
-// 			labelloc="t"
-// 			graph [];
-// 			node [
-// 				fontname="Jetbrains Mono Regular,Ubuntu Mono,Helvetica"
-// 				shape=record
-// 				labelloc="t"
-// 			];
-// 	`
-// 	for _, pkg := range parsed {
-
-// 		var clusterCount = 0
-// 		var fcount = 1
-// 		for filename := range pkg.Files {
-// 			structs, err := golang.ExtractStructs(filename)
-// 			if err != nil {
-// 				return "", err
-// 			}
-// 			var structMap = map[string](*golang.StructDecl){}
-// 			var structNameMap = map[(*golang.StructDecl)]string{}
-// 			for _, theStruct := range structs {
-// 				if showPrivate || theStruct.IsPublic() {
-// 					dot = dot + fmt.Sprintf("%s\n", theStruct.Dot(showPrivate))
-// 					// typeId := theStruct.TypeId()
-// 					structMap[theStruct.Name] = theStruct
-// 					structNameMap[theStruct] = theStruct.Name
-// 				}
-// 			}
-// 			for _, theStruct := range structs {
-// 				if showPrivate || theStruct.IsPublic() {
-// 					dot = dot + fmt.Sprintf("%s\n", theStruct.DotDeps(structNameMap, structMap))
-// 				}
-// 			}
-// 		}
-
-// 		dot = dot + fmt.Sprintf("subgraph cluster_%d { rank = same; label = \"«%s functions»\";\n",
-// 			clusterCount, pkg.Name,
-// 		)
-// 		dot = dot + fmt.Sprintf("%s_Functions[label = <{",
-// 			pkg.Name,
-// 		)
-// 		for filename := range pkg.Files {
-
-// 			funcs, err := golang.ExtractFunctions(filename)
-// 			if err != nil {
-// 				return "", err
-// 			}
-// 			funcDecls := ""
-// 			for _, theFunc := range funcs {
-// 				if showPrivate || theFunc.IsPublic() {
-// 					funcDecls = fmt.Sprintf("%s%s", funcDecls, theFunc.DotLabel())
-// 				}
-// 			}
-// 			// fmt.Printf("%s_Functions_%d[label = <{<b>«func» (%s)</b><br align=\"left\"/>%s}>, shape=record];\n",
-// 			// 	pkg.Name,
-// 			// 	fcount,
-// 			// 	filename,
-// 			// 	funcDecls,
-// 			// )
-// 			dot = dot + fmt.Sprintf("<b>%s</b><br align=\"left\"/>%s", filename, funcDecls)
-// 			fcount++
-// 		}
-// 		dot = dot + fmt.Sprintf("}>, color=white, shape=record];\n")
-// 		dot = dot + fmt.Sprintf("}\n")
-// 		clusterCount++
-
-// 		dot = dot + fmt.Sprintf("}\n")
-// 	}
-
-// 	return dot, nil
-// }
 
 func init() {
 	rootCmd.AddCommand(dotCmd)

@@ -31,6 +31,13 @@ type FuncDecl struct {
 	Args       []FuncArgDecl
 }
 
+type VarDecl struct {
+	Ast     *ast.ValueSpec
+	Package string
+	Name    string
+	Type    string
+}
+
 type StructDecl struct {
 	Ast *ast.StructType
 
@@ -43,6 +50,10 @@ type StructDecl struct {
 func (str StructDecl) String() string {
 	j, _ := json.MarshalIndent(str, "", "  ")
 	return string(j)
+}
+
+func (theVar VarDecl) IsPublic() bool {
+	return unicode.IsUpper([]rune(theVar.Name)[0])
 }
 
 func (theField StructFieldDecl) IsPublic() bool {
@@ -108,6 +119,19 @@ func (theFunc FuncDecl) DotLabel() string {
 	}
 	result = fmt.Sprintf("%s%s %s%s %s<br align=\"left\"/>",
 		result, access, theFunc.Name, dotEscape(paramDecl), dotEscape(returnDecl),
+	)
+	return result
+}
+
+func (theVar VarDecl) DotLabel() string {
+
+	access := "-"
+	if theVar.IsPublic() {
+		access = "+"
+	}
+
+	result := fmt.Sprintf("%s %s: %s<br align=\"left\"/>",
+		access, dotEscape(theVar.Name), dotEscape(theVar.Type),
 	)
 	return result
 }
@@ -348,15 +372,71 @@ func ExtractFunctions(filename string) ([]FuncDecl, error) {
 	return result, nil
 }
 
+// Extract "pure" variables that do not belong to a struct
+func ExtractVars(filename string) ([]VarDecl, error) {
+	astFile, err := getAstFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = []VarDecl{}
+
+	pkgName := astFile.Name.String()
+
+	ast.Inspect(astFile, func(n ast.Node) bool {
+
+		switch decl := n.(type) {
+		case *ast.GenDecl:
+			for _, spec := range decl.Specs {
+				switch spec := spec.(type) {
+				// case *ast.ImportSpec:
+				// 	fmt.Println("Import", spec.Path.Value)
+				// case *ast.TypeSpec:
+				// 	fmt.Println("Type", spec.Name.String())
+				case *ast.ValueSpec:
+					for _, id := range spec.Names {
+						// fmt.Printf("Var %s: %v", id.Name, id.Obj.Decl.(*ast.ValueSpec).Values[0].(*ast.BasicLit).Value)
+
+						var valueExpr = ""
+
+						for _, val := range spec.Values {
+							if len(valueExpr) > 0 {
+								valueExpr += ", "
+							}
+							valueExpr += expr(val)
+						}
+
+						theVar := VarDecl{
+							Ast:     spec,
+							Package: pkgName,
+							Name:    id.Name,
+							Type:    valueExpr,
+						}
+						result = append(result, theVar)
+					}
+				default:
+					// fmt.Printf("Unknown token type: %s\n", decl.Tok)
+				}
+			}
+		}
+		return true
+	})
+
+	return result, nil
+}
+
 func expr(e ast.Expr) (ret string) {
 	switch x := e.(type) {
 	case *ast.StarExpr:
 		sel, ok := x.X.(*ast.SelectorExpr)
 		if ok {
-			return fmt.Sprintf("%s*%s.%s",
-				ret,
-				sel.X.(*ast.Ident).Name,
-				sel.Sel.Name,
+			// return fmt.Sprintf("%s*%s.%s",
+			// 	ret,
+			// 	sel.X.(*ast.Ident).Name,
+			// 	sel.Sel.Name,
+			// )
+			return fmt.Sprintf("%s*%s",
+				ret, expr(sel.X),
 			)
 		}
 		// x.X.(*ast.SelectorExpr).X.(*ast.Ident).Name
@@ -378,6 +458,16 @@ func expr(e ast.Expr) (ret string) {
 		return "inteface{}"
 	case *ast.StructType:
 		return "struct"
+	case *ast.CallExpr:
+		return fmt.Sprintf("calling %v", expr(x.Fun))
+	case *ast.BinaryExpr:
+		return fmt.Sprintf("%v %v %v", expr(x.X), x.Op, expr(x.Y))
+	case *ast.BasicLit:
+		return x.Value
+	case *ast.UnaryExpr:
+		return fmt.Sprintf("%v%v", x.Op, expr(x.X))
+	case *ast.CompositeLit:
+		return fmt.Sprintf("%v", expr(x.Type))
 	case *ast.FuncType:
 		returnType := ""
 		if x.Results != nil {
