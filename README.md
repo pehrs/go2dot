@@ -31,10 +31,9 @@ make
 export PATH=/path/to/go2dot/bin:$PATH
 ```
 
-## Usaged
+## Usage
 
-### Genereate DOT file
-
+### Generate DOT 
 ```shell
 # Generate DOT file for a package (including private functions and structs)
 go2dot dot --private ./pkg/golang/ > samples/graph.dot 
@@ -44,7 +43,7 @@ dot -Tpng samples/graph.dot -o samples/test-pkg-golang.png
 ```
 
 
-### Genereate image
+### Generate image
 
 ```shell
 # Generate high quality PNG with custom fonts
