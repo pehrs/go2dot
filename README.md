@@ -53,7 +53,7 @@ go2dot graph -Tpng -p ./pkg/golang/ samples/test-pkg-golang.png \
 
 ## Known Issues
 
-- We have not tested go expression to the full yet. The [./samples/sample.go](./samples/sample.go) file is used to represent a "typical" go source for functional testing.
+- We have not tested go expressions to the full yet. The [./samples/sample.go](./samples/sample.go) file is used to represent a "typical" golang source for functional testing.
 
 - `dot` does not generate SVG very well.
 
